@@ -3,37 +3,22 @@ import cors from "cors";
 import { randomUUID } from "crypto";
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
 let users = [];
 
-/**
- * Helper: build consistent response
- */
-const response = (data, status = "success") => ({
-  status,
-  data,
-});
-
-/**
- * CREATE USER (with idempotency check)
- */
+/* ---------------- CREATE ---------------- */
 app.post("/api/users", (req, res) => {
   const { name, gender, age, country_id } = req.body;
 
-  if (!name) {
-    return res.status(400).json({ message: "Name is required" });
-  }
-
-  // idempotency check (case-insensitive)
-  const exists = users.find((u) => u.name.toLowerCase() === name.toLowerCase());
+  const exists = users.find(
+    (u) => u.name.toLowerCase() === name?.toLowerCase(),
+  );
 
   if (exists) {
-    return res.status(409).json({
-      message: "User already exists",
-      data: exists,
-    });
+    return res.status(409).json({ message: "User already exists" });
   }
 
   const user = {
@@ -57,12 +42,10 @@ app.post("/api/users", (req, res) => {
 
   users.push(user);
 
-  res.status(201).json(response(user));
+  res.status(201).json({ status: "success", data: user });
 });
 
-/**
- * GET ALL USERS (with filters)
- */
+/* ---------------- GET ALL ---------------- */
 app.get("/api/users", (req, res) => {
   let result = [...users];
 
@@ -82,12 +65,10 @@ app.get("/api/users", (req, res) => {
     result = result.filter((u) => u.age_group === age_group);
   }
 
-  res.json(response(result));
+  res.json({ status: "success", data: result });
 });
 
-/**
- * GET USER BY ID
- */
+/* ---------------- GET BY ID ---------------- */
 app.get("/api/users/:id", (req, res) => {
   const user = users.find((u) => u.id === req.params.id);
 
@@ -95,12 +76,10 @@ app.get("/api/users/:id", (req, res) => {
     return res.status(404).json({ message: "User not found" });
   }
 
-  res.json(response(user));
+  res.json({ status: "success", data: user });
 });
 
-/**
- * DELETE USER
- */
+/* ---------------- DELETE ---------------- */
 app.delete("/api/users/:id", (req, res) => {
   const index = users.findIndex((u) => u.id === req.params.id);
 
@@ -110,17 +89,8 @@ app.delete("/api/users/:id", (req, res) => {
 
   users.splice(index, 1);
 
-  return res.sendStatus(204);
+  res.status(204).send();
 });
 
-/**
- * HEALTH CHECK
- */
-app.get("/", (req, res) => {
-  res.json({ status: "API running" });
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+/* IMPORTANT: export for Vercel */
+export default app;
