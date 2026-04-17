@@ -3,8 +3,9 @@ const app = express();
 
 app.use(express.json());
 
-app.get("/api/test", (req, res) => {
-  res.json({ ok: true });
+// test route
+app.get("/", (req, res) => {
+  res.json({ ok: true, message: "API working" });
 });
 
 module.exports = app;
