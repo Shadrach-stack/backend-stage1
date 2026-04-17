@@ -1,37 +1,62 @@
 let profiles = [];
 
-const getJSONBody = (req) =>
-  new Promise((resolve, reject) => {
-    let body = "";
+// external APIs
+const getGender = async (name) => {
+  const res = await fetch(`https://api.genderize.io?name=${name}`);
+  return res.json();
+};
 
-    req.on("data", (chunk) => {
-      body += chunk;
-    });
+const getAge = async (name) => {
+  const res = await fetch(`https://api.agify.io?name=${name}`);
+  return res.json();
+};
 
-    req.on("end", () => {
-      try {
-        const parsed = JSON.parse(body || "{}");
-        resolve(parsed);
-      } catch (err) {
-        reject(err);
-      }
-    });
-  });
+const getNationality = async (name) => {
+  const res = await fetch(`https://api.nationalize.io?name=${name}`);
+  return res.json();
+};
+
+const getAgeGroup = (age) => {
+  if (age <= 12) return "child";
+  if (age <= 19) return "teenager";
+  if (age <= 59) return "adult";
+  return "senior";
+};
 
 module.exports = async (req, res) => {
   try {
-    // GET all profiles
-    if (req.method === "GET") {
-      return res.status(200).json({
-        status: "success",
-        data: profiles,
-      });
+    const { method } = req;
+    const url = req.url;
+
+    // GET ALL
+    if (method === "GET" && url === "/api") {
+      return res.json({ status: "success", data: profiles });
     }
 
-    // POST create profile
-    if (req.method === "POST") {
-      const body = await getJSONBody(req);
-      const { name } = body;
+    // GET ONE
+    if (method === "GET" && url.startsWith("/api/")) {
+      const id = url.split("/")[2];
+      const profile = profiles.find((p) => p.id === id);
+
+      if (!profile) {
+        return res.status(404).json({
+          status: "error",
+          message: "Not found",
+        });
+      }
+
+      return res.json({ status: "success", data: profile });
+    }
+
+    // CREATE
+    if (method === "POST" && url === "/api") {
+      let body = req.body;
+
+      if (typeof body === "string") {
+        body = JSON.parse(body);
+      }
+
+      const { name } = body || {};
 
       if (!name) {
         return res.status(400).json({
@@ -46,15 +71,26 @@ module.exports = async (req, res) => {
       if (existing) {
         return res.json({
           status: "success",
-          message: "Profile already exists",
+          message: "Profile exists",
           data: existing,
         });
       }
 
-      // fake simple profile (to avoid API crash for now)
+      const [gender, age, nat] = await Promise.all([
+        getGender(cleanName),
+        getAge(cleanName),
+        getNationality(cleanName),
+      ]);
+
+      const topCountry = nat.country?.[0];
+
       const profile = {
         id: Date.now().toString(),
         name: cleanName,
+        gender: gender.gender,
+        age: age.age,
+        age_group: getAgeGroup(age.age),
+        country_id: topCountry?.country_id,
         created_at: new Date().toISOString(),
       };
 
@@ -66,12 +102,33 @@ module.exports = async (req, res) => {
       });
     }
 
+    // DELETE
+    if (method === "DELETE" && url.startsWith("/api/")) {
+      const id = url.split("/")[2];
+
+      const index = profiles.findIndex((p) => p.id === id);
+
+      if (index === -1) {
+        return res.status(404).json({
+          status: "error",
+          message: "Not found",
+        });
+      }
+
+      profiles.splice(index, 1);
+
+      return res.json({
+        status: "success",
+        message: "Deleted",
+      });
+    }
+
     return res.status(404).json({
       status: "error",
       message: "Route not found",
     });
-  } catch (error) {
-    console.log("ERROR:", error);
+  } catch (err) {
+    console.log(err);
 
     return res.status(500).json({
       status: "error",
