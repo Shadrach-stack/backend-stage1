@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
   try {
     const method = req.method;
     const basePath = "/api";
-    const path = (req.url || "").split("?")[0].replace(/\/$/, "");
+    const id = req.query?.id;
 
     // =========================
     // GET ALL PROFILES
@@ -47,10 +47,7 @@ module.exports = async (req, res) => {
     // =========================
     // GET SINGLE PROFILE
     // =========================
-    if (method === "GET" && path.startsWith(`${basePath}/`)) {
-      const parts = path.split("/");
-      const id = parts[parts.length - 1];
-
+    if (method === "GET" && id) {
       const profile = profiles.find((p) => p.id === id);
 
       if (!profile) {
@@ -130,10 +127,7 @@ module.exports = async (req, res) => {
     // =========================
     // DELETE PROFILE
     // =========================
-    if (method === "DELETE" && path.startsWith(`${basePath}/`)) {
-      const parts = path.split("/");
-      const id = parts[parts.length - 1];
-
+    if (method === "DELETE" && id) {
       const index = profiles.findIndex((p) => p.id === id);
 
       if (index === -1) {
