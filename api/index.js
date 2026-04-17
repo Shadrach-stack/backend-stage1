@@ -1,52 +1,37 @@
-// api/index.js
-
-const { v4: uuidv4 } = require("uuid");
-
 let profiles = [];
 
-// external API helpers
-const getGender = async (name) => {
-  const res = await fetch(`https://api.genderize.io?name=${name}`);
-  return res.json();
-};
+const getJSONBody = (req) =>
+  new Promise((resolve, reject) => {
+    let body = "";
 
-const getAge = async (name) => {
-  const res = await fetch(`https://api.agify.io?name=${name}`);
-  return res.json();
-};
+    req.on("data", (chunk) => {
+      body += chunk;
+    });
 
-const getNationality = async (name) => {
-  const res = await fetch(`https://api.nationalize.io?name=${name}`);
-  return res.json();
-};
-
-const getAgeGroup = (age) => {
-  if (age <= 12) return "child";
-  if (age <= 19) return "teenager";
-  if (age <= 59) return "adult";
-  return "senior";
-};
+    req.on("end", () => {
+      try {
+        const parsed = JSON.parse(body || "{}");
+        resolve(parsed);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
 
 module.exports = async (req, res) => {
   try {
-    // GET ALL
-    if (req.method === "GET" && req.url === "/api") {
+    // GET all profiles
+    if (req.method === "GET") {
       return res.status(200).json({
         status: "success",
         data: profiles,
       });
     }
 
-    // CREATE PROFILE
-    if (req.method === "POST" && req.url === "/api") {
-      let body = req.body;
-
-      // Fix for Vercel (body might be string)
-      if (typeof body === "string") {
-        body = JSON.parse(body);
-      }
-
-      const { name } = body || {};
+    // POST create profile
+    if (req.method === "POST") {
+      const body = await getJSONBody(req);
+      const { name } = body;
 
       if (!name) {
         return res.status(400).json({
@@ -57,7 +42,6 @@ module.exports = async (req, res) => {
 
       const cleanName = name.toLowerCase();
 
-      // duplicate check
       const existing = profiles.find((p) => p.name === cleanName);
       if (existing) {
         return res.json({
@@ -67,25 +51,10 @@ module.exports = async (req, res) => {
         });
       }
 
-      // call APIs
-      const [genderData, ageData, natData] = await Promise.all([
-        getGender(cleanName),
-        getAge(cleanName),
-        getNationality(cleanName),
-      ]);
-
-      const topCountry = natData.country?.[0];
-
+      // fake simple profile (to avoid API crash for now)
       const profile = {
-        id: uuidv4(),
+        id: Date.now().toString(),
         name: cleanName,
-        gender: genderData.gender,
-        gender_probability: genderData.probability,
-        sample_size: genderData.count,
-        age: ageData.age,
-        age_group: getAgeGroup(ageData.age),
-        country_id: topCountry?.country_id,
-        country_probability: topCountry?.probability,
         created_at: new Date().toISOString(),
       };
 
@@ -102,7 +71,7 @@ module.exports = async (req, res) => {
       message: "Route not found",
     });
   } catch (error) {
-    console.log(error);
+    console.log("ERROR:", error);
 
     return res.status(500).json({
       status: "error",
