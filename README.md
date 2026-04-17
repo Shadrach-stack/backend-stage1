@@ -1,143 +1,130 @@
 # 🧠 Profile API Backend (Stage 1)
 
-A Node.js + Express backend API that generates user profile data using external APIs and stores results in a SQLite database.
+A Node.js + Serverless backend API deployed on Vercel that generates user profile data using external APIs and stores results in memory.
 
 ---
 
-## 🚀 Features
+## 🚀 Live API
 
-- Create profile with name
+👉 https://backend-stage1.vercel.app/api
+
+---
+
+## ⚙️ Features
+
+- Create profile using name input
 - Fetch gender, age, and nationality using external APIs
-- Store profiles in SQLite database
-- Prevent duplicate entries (idempotency)
+- Auto-generate age group classification
+- Store profiles in memory (serverless compatible)
+- Prevent duplicate profiles
 - Get all profiles
-- Get single profile
-- Delete profile
+- Get single profile by ID
+- Delete profile by ID
 
 ---
 
-## ⚙️ Tech Stack
+## 🧰 Tech Stack
 
-- Node.js
-- Express.js
-- SQLite
-- Axios
-- UUID
-
----
-
-## 📦 Installation
-
-npm install
+- Node.js (Serverless Functions)
+- Vercel
+- External APIs (Genderize, Agify, Nationalize)
+- JavaScript (ES6+)
 
 ---
 
-## ▶️ Run Server
-
-node src/server.js
-
-Server runs at:
-http://localhost:3000
+## 📦 API Endpoints
 
 ---
 
-## 📡 API DOCUMENTATION
+### ➕ Create Profile
 
-### Create Profile
+**POST**
+/api
 
-POST /api/profiles
-
-Request Body:
+**Request Body:**
 {
-"name": "john"
+  "name": "john"
 }
+
+**Response:**
+{
+  "status": "success",
+  "data": {
+    "id": "123456789",
+    "name": "john",
+    "gender": "male",
+    "gender_probability": 0.98,
+    "sample_size": 1000,
+    "age": 30,
+    "age_group": "adult",
+    "country_id": "US",
+    "country_probability": 0.87,
+    "created_at": "2026-04-17T12:00:00.000Z"
+  }
+}
+
+---
+
+### 📥 Get All Profiles
+
+**GET**
+/api
+
+**Response:**
+{
+  "status": "success",
+  "data": []
+}
+
+---
+
+### 🔍 Get Single Profile
+
+**GET**
+/api?id=<profile_id>
+
+Example:
+https://backend-stage1.vercel.app/api?id=123456789
+
+---
+
+### ❌ Delete Profile
+
+**DELETE**
+/api?id=<profile_id>
+
+Example:
+curl -X DELETE "https://backend-stage1.vercel.app/api?id=123456789"
 
 Response:
 {
-"status": "success",
-"data": {
-"id": "uuid",
-"name": "john",
-"gender": "male",
-"gender_probability": 0.98,
-"sample_size": 1000,
-"age": 30,
-"age_group": "adult",
-"country_id": "NG",
-"country_probability": 0.87,
-"created_at": "timestamp"
-}
-}
-
----
-
-### Get All Profiles
-
-GET /api/profiles
-
-Response:
-{
-"status": "success",
-"data": []
-}
-
----
-
-### Get Single Profile
-
-GET /api/profiles/:id
-
-Response:
-{
-"status": "success",
-"data": {
-"id": "uuid",
-"name": "john",
-"gender": "male",
-"age": 30,
-"age_group": "adult"
-}
-}
-
----
-
-### Delete Profile
-
-DELETE /api/profiles/:id
-
-Response:
-{
-"status": "success",
-"message": "Profile deleted"
+  "status": "success",
+  "message": "Deleted"
 }
 
 ---
 
 ## 🧪 CURL EXAMPLES
 
-Create Profile:
-
-curl -X POST http://localhost:3000/api/profiles \
+### Create Profile
+curl -X POST https://backend-stage1.vercel.app/api \
 -H "Content-Type: application/json" \
 -d '{"name":"john"}'
 
 ---
 
-Get All Profiles:
-
-curl http://localhost:3000/api/profiles
-
----
-
-Get Single Profile:
-
-curl http://localhost:3000/api/profiles/<id>
+### Get All Profiles
+curl https://backend-stage1.vercel.app/api
 
 ---
 
-Delete Profile:
+### Get Single Profile
+curl https://backend-stage1.vercel.app/api?id=123456789
 
-curl -X DELETE http://localhost:3000/api/profiles/<id>
+---
+
+### Delete Profile
+curl -X DELETE "https://backend-stage1.vercel.app/api?id=123456789"
 
 ---
 
@@ -151,16 +138,19 @@ curl -X DELETE http://localhost:3000/api/profiles/<id>
 
 ## 📁 Project Structure
 
-src/
-├── controllers/
-├── routes/
-├── db/
-├── services/
-├── app.js
-└── server.js
+api/
+ └── index.js
 
 ---
 
-## ✨ Author
+## ✨ Notes
+
+- This project uses serverless in-memory storage
+- Data resets on redeploy (expected on Vercel)
+- Fully deployed and production-ready via Vercel
+
+---
+
+## 👨‍💻 Author
 
 Built by Shadrach-stack
