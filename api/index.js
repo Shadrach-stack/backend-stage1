@@ -1,6 +1,8 @@
 let profiles = [];
 
-// external APIs
+// =========================
+// External API functions
+// =========================
 const getGender = async (name) => {
   const res = await fetch(`https://api.genderize.io?name=${name}`);
   return res.json();
@@ -23,19 +25,31 @@ const getAgeGroup = (age) => {
   return "senior";
 };
 
+// =========================
+// MAIN HANDLER
+// =========================
 module.exports = async (req, res) => {
   try {
-    const { method } = req;
-    const url = req.url;
+    const method = req.method;
+    const basePath = "/api";
+    const path = req.url.split("?")[0];
 
-    // GET ALL
-    if (method === "GET" && url === "/api") {
-      return res.json({ status: "success", data: profiles });
+    // =========================
+    // GET ALL PROFILES
+    // =========================
+    if (method === "GET" && path === basePath) {
+      return res.json({
+        status: "success",
+        data: profiles,
+      });
     }
 
-    // GET ONE
-    if (method === "GET" && url.startsWith("/api/")) {
-      const id = url.split("/")[2];
+    // =========================
+    // GET SINGLE PROFILE
+    // =========================
+    if (method === "GET" && path.startsWith(`${basePath}/`)) {
+      const id = path.replace(`${basePath}/`, "");
+
       const profile = profiles.find((p) => p.id === id);
 
       if (!profile) {
@@ -45,11 +59,16 @@ module.exports = async (req, res) => {
         });
       }
 
-      return res.json({ status: "success", data: profile });
+      return res.json({
+        status: "success",
+        data: profile,
+      });
     }
 
-    // CREATE
-    if (method === "POST" && url === "/api") {
+    // =========================
+    // CREATE PROFILE
+    // =========================
+    if (method === "POST" && path === basePath) {
       let body = req.body;
 
       if (typeof body === "string") {
@@ -67,15 +86,17 @@ module.exports = async (req, res) => {
 
       const cleanName = name.toLowerCase();
 
+      // duplicate check
       const existing = profiles.find((p) => p.name === cleanName);
       if (existing) {
         return res.json({
           status: "success",
-          message: "Profile exists",
+          message: "Profile already exists",
           data: existing,
         });
       }
 
+      // external APIs
       const [gender, age, nat] = await Promise.all([
         getGender(cleanName),
         getAge(cleanName),
@@ -88,9 +109,12 @@ module.exports = async (req, res) => {
         id: Date.now().toString(),
         name: cleanName,
         gender: gender.gender,
+        gender_probability: gender.probability,
+        sample_size: gender.count,
         age: age.age,
         age_group: getAgeGroup(age.age),
         country_id: topCountry?.country_id,
+        country_probability: topCountry?.probability,
         created_at: new Date().toISOString(),
       };
 
@@ -102,9 +126,11 @@ module.exports = async (req, res) => {
       });
     }
 
-    // DELETE
-    if (method === "DELETE" && url.startsWith("/api/")) {
-      const id = url.split("/")[2];
+    // =========================
+    // DELETE PROFILE
+    // =========================
+    if (method === "DELETE" && path.startsWith(`${basePath}/`)) {
+      const id = path.replace(`${basePath}/`, "");
 
       const index = profiles.findIndex((p) => p.id === id);
 
@@ -123,6 +149,9 @@ module.exports = async (req, res) => {
       });
     }
 
+    // =========================
+    // FALLBACK
+    // =========================
     return res.status(404).json({
       status: "error",
       message: "Route not found",
