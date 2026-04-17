@@ -1,7 +1,7 @@
 let profiles = [];
 
 // =========================
-// External API functions
+// External APIs
 // =========================
 const getGender = async (name) => {
   const res = await fetch(`https://api.genderize.io?name=${name}`);
@@ -26,18 +26,17 @@ const getAgeGroup = (age) => {
 };
 
 // =========================
-// MAIN HANDLER
+// HANDLER
 // =========================
 module.exports = async (req, res) => {
   try {
     const method = req.method;
-    const basePath = "/api";
     const id = req.query?.id;
 
     // =========================
-    // GET ALL PROFILES
+    // GET ALL
     // =========================
-    if (method === "GET" && path === basePath) {
+    if (method === "GET" && !id) {
       return res.json({
         status: "success",
         data: profiles,
@@ -45,7 +44,7 @@ module.exports = async (req, res) => {
     }
 
     // =========================
-    // GET SINGLE PROFILE
+    // GET ONE
     // =========================
     if (method === "GET" && id) {
       const profile = profiles.find((p) => p.id === id);
@@ -64,9 +63,9 @@ module.exports = async (req, res) => {
     }
 
     // =========================
-    // CREATE PROFILE
+    // CREATE
     // =========================
-    if (method === "POST" && path === basePath) {
+    if (method === "POST") {
       let body = req.body;
 
       if (typeof body === "string") {
@@ -84,7 +83,6 @@ module.exports = async (req, res) => {
 
       const cleanName = name.toLowerCase();
 
-      // duplicate check
       const existing = profiles.find((p) => p.name === cleanName);
       if (existing) {
         return res.json({
@@ -94,7 +92,6 @@ module.exports = async (req, res) => {
         });
       }
 
-      // external APIs
       const [gender, age, nat] = await Promise.all([
         getGender(cleanName),
         getAge(cleanName),
@@ -125,7 +122,7 @@ module.exports = async (req, res) => {
     }
 
     // =========================
-    // DELETE PROFILE
+    // DELETE
     // =========================
     if (method === "DELETE" && id) {
       const index = profiles.findIndex((p) => p.id === id);
@@ -145,9 +142,6 @@ module.exports = async (req, res) => {
       });
     }
 
-    // =========================
-    // FALLBACK
-    // =========================
     return res.status(404).json({
       status: "error",
       message: "Route not found",
