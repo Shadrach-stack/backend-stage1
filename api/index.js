@@ -39,7 +39,14 @@ module.exports = async (req, res) => {
 
     // CREATE PROFILE
     if (req.method === "POST" && req.url === "/api") {
-      const { name } = req.body;
+      let body = req.body;
+
+      // Fix for Vercel (body might be string)
+      if (typeof body === "string") {
+        body = JSON.parse(body);
+      }
+
+      const { name } = body || {};
 
       if (!name) {
         return res.status(400).json({
