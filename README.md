@@ -1,156 +1,108 @@
-# 🧠 Profile API Backend (Stage 1)
+# 🚀 Stage 1 Backend API
 
-A Node.js + Serverless backend API deployed on Vercel that generates user profile data using external APIs and stores results in memory.
+## 📌 Overview
 
----
-
-## 🚀 Live API
-
-👉 https://backend-stage1.vercel.app/api
+This is a simple REST API built with Node.js and Express. It supports creating, reading, filtering, and deleting user profiles. The API is deployed on Vercel.
 
 ---
 
-## ⚙️ Features
+## 🌐 Live API
 
-- Create profile using name input
-- Fetch gender, age, and nationality using external APIs
-- Auto-generate age group classification
-- Store profiles in memory (serverless compatible)
-- Prevent duplicate profiles
-- Get all profiles
-- Get single profile by ID
-- Delete profile by ID
+https://backend-stage1.vercel.app
 
 ---
 
-## 🧰 Tech Stack
+## 📍 Base URL
 
-- Node.js (Serverless Functions)
-- Vercel
-- External APIs (Genderize, Agify, Nationalize)
-- JavaScript (ES6+)
+https://backend-stage1.vercel.app/api/users
 
 ---
 
-## 📦 API Endpoints
+## 📚 Endpoints
 
----
+### ➕ Create User (POST)
 
-### ➕ Create Profile
+POST /api/users
 
-**POST**
-/api
-
-**Request Body:**
+Request Body:
 {
-  "name": "john"
-}
-
-**Response:**
-{
-  "status": "success",
-  "data": {
-    "id": "123456789",
-    "name": "john",
-    "gender": "male",
-    "gender_probability": 0.98,
-    "sample_size": 1000,
-    "age": 30,
-    "age_group": "adult",
-    "country_id": "US",
-    "country_probability": 0.87,
-    "created_at": "2026-04-17T12:00:00.000Z"
-  }
+"name": "michael",
+"gender": "male",
+"age": 25,
+"country_id": "NG"
 }
 
 ---
 
-### 📥 Get All Profiles
+### 📄 Get All Users (GET)
 
-**GET**
-/api
-
-**Response:**
-{
-  "status": "success",
-  "data": []
-}
+GET /api/users
 
 ---
 
-### 🔍 Get Single Profile
+### 🔍 Get User by ID (GET)
 
-**GET**
-/api?id=<profile_id>
-
-Example:
-https://backend-stage1.vercel.app/api?id=123456789
+GET /api/users/:id
 
 ---
 
-### ❌ Delete Profile
+### ❌ Delete User (DELETE)
 
-**DELETE**
-/api?id=<profile_id>
-
-Example:
-curl -X DELETE "https://backend-stage1.vercel.app/api?id=123456789"
-
-Response:
-{
-  "status": "success",
-  "message": "Deleted"
-}
+DELETE /api/users/:id
 
 ---
 
-## 🧪 CURL EXAMPLES
+## 🔎 Query Filters
 
-### Create Profile
-curl -X POST https://backend-stage1.vercel.app/api \
--H "Content-Type: application/json" \
--d '{"name":"john"}'
+You can filter users using query parameters:
 
----
+gender → male / female  
+country_id → e.g. NG  
+age_group → child / young_adult / adult / senior
 
-### Get All Profiles
-curl https://backend-stage1.vercel.app/api
-
----
-
-### Get Single Profile
-curl https://backend-stage1.vercel.app/api?id=123456789
+Examples:
+GET /api/users?gender=male  
+GET /api/users?country_id=NG  
+GET /api/users?age_group=young_adult
 
 ---
 
-### Delete Profile
-curl -X DELETE "https://backend-stage1.vercel.app/api?id=123456789"
+## 🧪 Testing with curl
+
+Create User:
+curl -X POST https://backend-stage1.vercel.app/api/users -H "Content-Type: application/json" -d '{"name":"michael","gender":"male","age":25,"country_id":"NG"}'
+
+Get All Users:
+curl https://backend-stage1.vercel.app/api/users
+
+Get User by ID:
+curl https://backend-stage1.vercel.app/api/users/:id
+
+Delete User:
+curl -X DELETE https://backend-stage1.vercel.app/api/users/:id
 
 ---
 
-## 🌐 External APIs Used
+## 🛠 Tech Stack
 
-- https://api.genderize.io
-- https://api.agify.io
-- https://api.nationalize.io
-
----
-
-## 📁 Project Structure
-
-api/
- └── index.js
+Node.js  
+Express.js  
+Vercel
 
 ---
 
-## ✨ Notes
+## ✅ Features
 
-- This project uses serverless in-memory storage
-- Data resets on redeploy (expected on Vercel)
-- Fully deployed and production-ready via Vercel
+UUID-based user IDs  
+Idempotency (prevents duplicate users)  
+Filtering by gender, country, age group  
+Proper error handling  
+ISO 8601 timestamps (created_at)  
+RESTful API design
 
 ---
 
-## 👨‍💻 Author
+## 📦 Author
 
-Built by Shadrach-stack
+Shadrach-stack
+Built for Stage 1 Backend Task
